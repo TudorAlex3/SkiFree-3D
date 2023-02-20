@@ -1,75 +1,59 @@
 # SkiFree-3D
 
-This is the implementation of a partial car racing game. The game includes the race track, controlling the car on the track, a set of dynamic obstacles that will follow a predefined route on the track and replace the opponent cars in the race.
+This is the implementation of a 3D game where you control a skier on a slope who must collect gifts and avoid various obstacles. The game is an endless type, with the player's objective being to obtain as many points as possible.
 
-### Race Track
+### Scene construction
 
-To generate a track on which the car will move, we initially need a set of points that define it. The set consists of points in the XOZ plane (2D).
+#### ➢ Game field
 
-The track must meet 2 conditions:
+The character moves in the world (skiing on the slope) and thus modifies its global coordinates in the world. The obstacles and gifts remain fixed in the scene.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* There must be no right angle between any two consecutive segments. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* It must be a concave polygon.
+The field is created using a large square (quad) on which a repeating texture is applied. The square is drawn at the player's position.
 
-
-#### ➢ Track geometry generation
-
-Generating the race track can be done according to the following steps:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Create the points of a polygon that defines the race track. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Create two sets of additional points, inside and outside the polygon that defines the track. The points can be created along the perpendicular of each segment. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Create the edges between the points of the interior and exterior polygon. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Generate the triangles between the points of the two polygons. The triangles are created in a single mesh object. <br>
-
-To generate the geometry of the track (a 2D surface), we need 2 sets of points: one interior and one exterior. Each exterior segment is (approximately) parallel to its interior counterpart. From a set of points, we can generate as many sets of points parallel to the initial set (parallelism at the segment level) as we need.
-
-![1](https://user-images.githubusercontent.com/73998092/219688877-e19de981-7552-408e-aca2-da6acbf4c86d.PNG)
-
-With the two sets (interior and exterior), we can build the track surface. Let's assume that we have the outer points r1, r2, r3, and the inner points a1, a2, a3. The four triangles (r1, a1, a2), (r1, a2, r2), (r2, a2, a3), (r2, a3, r3) must be constructed.
-
-Thus, if we apply the same thing for all the points in both sets, we get the track.
+The illusion of the field moving under the character is given by modifying the texture coordinates of the field. This modification consists of a displacement applied to all UVs of the field mesh.
 
 
-#### ➢ Moving dynamic obstacles
+#### ➢ Player
 
-On the track, besides the player's car, other cars (opponents) must move on a predefined path parallel to the set of points that generate the track. This path can be obtained with the technique presented above.
+The player is made up of at least 3 parallelepipeds (body and two skis). The meshes that make up the player are created so that the player object can be translated and rotated as a single unit.
 
 
-#### ➢ Generating trees next to the track
+#### ➢ Obstacles
 
-In addition to the track, decorative trees are located. At least one tree must be constantly visible on the screen (requires high tree density). Trees should not block the track.
+During the game, the player can encounter 3 types of obstacles on the slope:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Trees, formed from at least 2 meshes. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Stones, formed from at least 3 meshes. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Light poles, made up of 2 meshes. <br>
+
+A texture is applied to each primitive used in creating the objects.
+
+
+#### ➢ Collectibles (gifts)
+
+The collectible object is imagined as a gift that the player can collect. The object consists of a single cube mesh. A texture has been applied to the object.
 
 <br><br>
-### Car Control
+### Player control (input)
 
-Of all the cars created on the track, one of them is the player's car. It can be controlled using the W, A, S, D keys, where W-S represents the forward-backward movement, and A-D will change the orientation of the car.
+The skier continuously moves down the slope at a constant speed.
 
+<br><br>
+### Camera positioning
 
-#### ➢ Camera control
+The camera is a perspective type and follows the player.
 
-The player's perspective will be a third-person one, so the camera is positioned behind the car, looking at it. For the smoothest control, the car will remain centered on the camera direction, so when the A-D keys are pressed, both the car and the camera will rotate. Moving forward-backward (W-S) will involve moving the car according to the camera's rotation.
+<br><br>
+### Generation of obstacles and collectible elements
 
+The 3D objects representing obstacles and collectibles are dynamically generated during the game as follows:
 
-#### ➢ Checking if the car is on the track
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* They are not instantiated and deleted outside the game's viewport. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* The algorithm for generating obstacles places the 3D objects on the field so that the player has to avoid them (instantiation position randomized within certain limits). <br>
 
-For this, we use the Triangle Area algorithm, which is described here: https://www.baeldung.com/cs/check-if-point-is-in-2d-triangle.
+<br><br>
+### Collisions
 
-
-#### ➢ Dynamic obstacle collision checking
-
-In order to have interaction with enemy vehicles, we need to detect them. This detection involves checking the position of the player's vehicle in relation to each enemy vehicle. To do this, a sphere-sphere collision check is performed. 
+Collision between the player and obstacles and between the player and gifts is achieved with the sphere-sphere method.
 
 Sphere-Sphere collision: https://developer.mozilla.org/enUS/docs/Games/Techniques/3D_collision_detection
-
-The spheres would have their centers at the center of the vehicle, and the radius of the sphere represents the collision detection distance.
-
-When an intersection between the player's vehicle and a dynamic obstacle is detected, the player's vehicle must stop. Any key pressed for movement or rotation control should no longer change the position or orientation of the vehicle. This stopping effect disappears when there is no longer an intersection.
-
-<br><br>
-### Minimap
-
-A minimap is rendered in one of the corners of the screen.
-To view the scene from above, the following is done:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* The camera position is moved above the vehicle (and consequently, the center of the camera's position); <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* he camera is switched to an orthographic projection. <br>
