@@ -1,6 +1,5 @@
 # SkiFree-3D
 
-
 <p align="justify">
 This is the implementation of a 3D game where you control a skier on a slope who must collect gifts and avoid various obstacles. The game is an endless type, with the player's objective being to obtain as many points as possible. <br>
 
